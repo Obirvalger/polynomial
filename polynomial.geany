@@ -23,10 +23,12 @@ long_line_behaviour=1
 long_line_column=80
 
 [files]
-current_page=1
+current_page=3
 FILE_NAME_0=676;Perl;0;EUTF-8;2;1;0;%2Fhome%2Fogneslav%2Fprog%2Fpolynomial%2Fpolynomial.pl;0;4
-FILE_NAME_1=88;C++;0;EUTF-8;2;1;0;%2Fhome%2Fogneslav%2Fprog%2Fpolynomial%2Fpolynomial.cpp;0;4
-FILE_NAME_2=271;Perl;0;EUTF-8;2;1;0;%2Fhome%2Fogneslav%2Fprog%2Fpolynomial%2Ftmp.pl;0;4
+FILE_NAME_1=3236;C++;0;EUTF-8;2;1;0;%2Fhome%2Fogneslav%2Fprog%2Fpolynomial%2Fpolynomial.cpp;0;4
+FILE_NAME_2=16;Perl;0;EUTF-8;2;1;0;%2Fhome%2Fogneslav%2Fprog%2Fpolynomial%2Ftmp.pl;0;4
+FILE_NAME_3=2082;Perl;0;EUTF-8;0;1;0;%2Fhome%2Fogneslav%2Fprog%2Fpolynomial%2Ftmptk.pl;0;4
+FILE_NAME_4=0;C++;0;EUTF-8;0;1;0;%2Fhome%2Fogneslav%2Fprog%2Fpolynomial%2Fpos.cpp;0;4
 
 [VTE]
 last_dir=/home/ogneslav/prog/polynomial
