@@ -40,14 +40,13 @@ vector<int> make_vector(const char *str) {
     for (int i = 0; i < strlen(str); ++i) {
         data[i] = str[i] - '0';
     }
-    if (_log2(data.size()) == -1) {
-        throw "wrong number of digts";
-    }
     return data;
 }
 
 vector<int> make_poly(vector<int> data){
     int len = data.size(), j;
+    int n = _log2(len);
+    if (n == -1) throw "wrong number of digts";
     for (int i = 0; i < _log2(len); ++i) {
         j = len - 1;
         while (j > 0) {
