@@ -6,7 +6,7 @@ use warnings;
 
 my $k = 2;
 my $type = "function";
-my $check_inp = 1;
+my $check_inp = 0;
 my $iwidth = 45;
 my $owidth = 53;
 my $bwidth = 0;
@@ -35,7 +35,8 @@ my $enter_file_frame = $file_frame->Frame(-background => "grey75")->pack(-side =
 my $file_entry = $enter_file_frame->Entry(-background => "white", -width => $iwidth - 5,
                                        -foreground => "black")->pack(-side => "right", -expand => 1, -fill => 'x');
 $check_frame->Label(-text=>"Input from file? ", -background => "grey75")->pack(-side => "left")->pack(-side => "left");
-my $chk = $check_frame->Checkbutton(-variable => \$check_inp, -onvalue => 1, -offvalue => 0, -background => "grey75")->pack();
+my $chk = $check_frame->Checkbutton(-variable => \$check_inp, -onvalue => 1, -offvalue => 0,
+                                            -background => "grey75")->pack(-anchor => 'e');
 $radio_frame->Label(-text=>"The value of logic: ")->pack(-side => "left");
 my $radio_2 = $radio_frame->Radiobutton(-text => "2", -value => "2",
                                            -variable=> \$k)->pack(-side => "left", -expand => 1);
@@ -63,48 +64,68 @@ my $print_poly = $out_frame->Text(-background => "white", -height => 4, -width =
 
 sub runprog {
     $print_poly->delete('0.0', 'end');
-    unless ($check_inp) {
+    my ($fd_vec, $fd_polar, $fd_out);
+    my ($vec_file, $polar_file, $out_file);
+    if ($check_inp) {
+        my $files = $file_entry->get();
+        $print_poly->insert('end', "Enter the filename!") unless $files;
+        ($vec_file, $polar_file, $out_file) = split(/;\s?/, $files);
+        #~ print("vf = '$vec_file'\npf = '$polar_file'\nof = '$out_file'\n");
+        unless (open($fd_vec, "<$vec_file")) {
+            $print_poly->insert('end', "Couldn't open $vec_file!\n") if $vec_file;
+        }
+        unless (open($fd_polar, "<$polar_file")) {
+            $print_poly->insert('end', "Couldn't open $polar_file!\n") if $polar_file;
+        }
+        unless (open($fd_out, ">$out_file")) {
+            $print_poly->insert('end', "Couldn't open $out_file!\n") if $out_file;
+        }
+    }
+    for(;;) {
         $_ = $func_entry->get();
+        chomp($_ = <$fd_vec>) if $vec_file;
+        last unless defined $_;
+        #~ print "$_\n";
         my $func_sep = /\d([ ,]+)\d/ ? $1 : '';
         my $func_vec = join("", split(/[ ,]+/, s/[\(\)]//gr));
         $_ = $polar_entry->get();
-        my $polar_vec;
+        chomp($_ = <$fd_polar>) if $polar_file;
+        last unless defined $_;
+        my $polar_vec = '0';
         if ($_) {
             $polar_vec = join("", split(/[ ,]+/, s/[\(\)]//gr));
         } else {
-            $polar_vec = '0' x (log(length($func_vec)) / log($k));
+            $polar_vec = '0' x (log(length($func_vec)) / log($k)) if $func_vec;
         }
-        #~ $print_poly->delete('0.0', 'end');
-        my $k1 = $k - 1; 
-        if ($func_vec =~ /^([0-$k1]+)$/) {
-            #~ say $func_vec;
-            #~ say $^O;
+        my $k1 = $k - 1;
+        print "fv = '$func_vec'\npv = '$polar_vec'\n";
+        if ($func_vec =~ /^([0-$k1]+)$/ && $polar_vec =~ /^([0-$k1]+)$/) {
             $_ = `./polynomial $func_vec $k $polar_vec $type` if $^O =~ /Linux/i;
             $_ = `polynomial.exe $func_vec $k $polar_vec $type` if $^O =~ /Win/i;
             if ($? == 0) {
                 my $poly = '' . (join($func_sep, split)) . '';
                 #~ say $poly;
-                $print_poly->insert("end", $poly);
+                $print_poly->insert("end", "$poly\n");
+                print $fd_out "$poly\n" if $fd_out;
             } else {
-                say $?;
-                my $err = "Something goes wrong!";
-                $err = "Wrong number of digits in function!\nMust be the power of $k!" if /1/;
+                #~ say $?;
+                my $err = "Something goes wrong!\n";
+                $err = "Wrong number of digits in function!\nMust be the power of $k!\n" if /1/;
                 $err = "Wrong number of digits in polarization!\n" if /2/;
                 $print_poly->insert("end", $err);
             }
             
-        } elsif($func_vec =~ /\A\Z/) {
-            $print_poly->insert('end', "Enter the function!");
         } else {
-            $print_poly->insert('end', "Wrong function!");
+            unless($func_vec) {
+                $print_poly->insert('end', "Enter the function!\n");
+            } elsif($func_vec !~ /^([0-$k1]+)$/) {
+                $print_poly->insert('end', "Wrong function!\n");
+            }
+            $print_poly->insert('end', "Wrong polarization!\n") if($polar_vec !~ /^([0-$k1]+)$/);
         }
-    } else {
-        my $files = $file_entry->get();
-        print "$files\n";
-        $print_poly->insert('end', "Enter the filename!") unless $files;
-        my ($vec_file, $polar_file, $out_file) = split(/;\s?/, $files);
-        print ("vf = $vec_file\npf = $polar_file\nof = $out_file\n");
+        last unless $check_inp;
     }
+    #~ $print_poly->insert('end', "All done\n") if $check_inp;
 }
 
 MainLoop;
