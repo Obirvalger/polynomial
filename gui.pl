@@ -2,7 +2,7 @@
 use v5.14;
 use Tk;
 use strict;
-#~ use warnings; 
+use warnings; 
 
 my $k = 2;
 my $type = "function";
@@ -12,7 +12,7 @@ my $check_inp = 0;
 #~ my $bwidth = 0;
 my $mw = MainWindow->new;
 $mw->optionAdd('*font', 'Sans 16');
-#~ $mw->geometry("600x250");
+$mw->geometry("800x480");
 $mw->title("Polynomial");
 
 
@@ -88,13 +88,30 @@ sub runprog {
     for(;;) {
         $_ = $func_entry->get();
         chomp($_ = <$fd_vec>) if $vec_file;
-        last unless defined $_;
+        return unless defined $_;
+        my $func_sep;
+        my $func_vec;
+        #~ say "type $type";
+        if ($type eq 'period') {
+            my $n = $1 if s/\A(\d+)[^\d\(]*//;
+            #~ say "Period n = $n";
+            $func_sep = /\d([ ,]+)\d/ ? $1 : '';
+            #~ say "$func_sep";
+            $_ = join("", split(/[ ,]+/, s/[\(\)]//gr));
+            my $kn = $k ** $n;
+            my $x = ($kn % length) ? int($kn/length($_)) + 1 : $kn/length($_);
+            #~ say $x;
+            $_ x= ($kn % length) ? $kn/length($_) + 1 : $kn/length($_);
+            $_ = substr $_, 0, $kn;
+            #~ say;
+            $func_vec = $_;
+        }
         #~ print "$_\n";
-        my $func_sep = /\d([ ,]+)\d/ ? $1 : '';
-        my $func_vec = join("", split(/[ ,]+/, s/[\(\)]//gr));
+        $func_sep //= /\d([ ,]+)\d/ ? $1 : '';
+        $func_vec //= join("", split(/[ ,]+/, s/[\(\)]//gr));
         $_ = $polar_entry->get();
         chomp($_ = <$fd_polar>) if $polar_file;
-        last unless defined $_;
+        return unless defined $_;
         my $polar_vec = '0';
         if ($_) {
             $polar_vec = join("", split(/[ ,]+/, s/[\(\)]//gr));
