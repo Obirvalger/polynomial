@@ -11,7 +11,7 @@ using namespace std;
 int ipow(int base, int exp) {
     int result = 1;
     while(exp) {
-        if (exp & 1) {   
+        if (exp & 1) {
             result *= base;
         }
         exp >>= 1;
@@ -29,7 +29,7 @@ int _log(int k, unsigned int x) {
 }
 
 vector<int> make_vector(const char *str) {
-    vector<int> data(strlen(str)); 
+    vector<int> data(strlen(str));
     for (int i = 0; i < strlen(str); ++i) {
         data[i] = str[i] - '0';
     }
@@ -84,7 +84,7 @@ int aconv(vector<int> number, int base) {
 	if (number[i])
 	    ret += number[i] * ipow(base, size - i);
     }
-    
+
     return ret;
 }
 
@@ -95,18 +95,18 @@ set<int> makeI(const vector<int> &a) {
 	if (a[i]) {
 	    I.insert(i + 1);
 	}
-	
+
     }
-    
+
     return I;
-} 
+}
 
 vector<vector<int> > make_all_Ekn(int k, int n) {
     vector<vector<int> > v(pow(k,n));
     for (int i = 0; i < v.size(); ++i) {
 	v[i] = conv(i,k,n);
     }
-    
+
     return v;
 }
 
@@ -126,7 +126,7 @@ vector<int> masked(const vector<vector<int> > &Ekn, const vector<int> &mask) {
 	if (le(Ekn[i], mask))
 	    v.push_back(i);
     }
-    //~ cout<<"Ekn\n"; 
+    //~ cout<<"Ekn\n";
     //~ for (int i = 0; i < Ekn.size(); ++i) {cout<<Ekn[i];}
     //~ cout<<"v = "<<v;
     return v;
@@ -145,7 +145,7 @@ int sum(const vector<vector<int> > &Ekn, int k, const vector<int> &val, const ve
 	sum += prod;
 	sum %= k;
     }
-    
+
     return sum;
 }
 
@@ -189,7 +189,7 @@ vector<int> polynomial(vector<int> f, const vector<int> &d, int k, int n) {
 	    c[i] %= k;
 	}
     }
-    
+
     return c;
 }
 
@@ -200,7 +200,7 @@ int main(int argc, char **argv) try {
 	vector<int> d = make_vector(argv[3]), p = polynomial(f,d,k,n);
 	cout<<p;
     } else {
-	printf("Need 3 argume arguments, passed %d\n", argc - 1);
+	printf("Need 3 arguments, passed %d\n", argc - 1);
     }
     return 0;
 } catch(const char *err) {

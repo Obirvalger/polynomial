@@ -2,14 +2,14 @@
 use v5.14;
 use Tk;
 use strict;
-use warnings; 
+#~ use warnings; 
 
 my $k = 2;
 my $type = "function";
 my $check_inp = 0;
-my $iwidth = 45;
-my $owidth = 53;
-my $bwidth = 0;
+#~ my $iwidth = 45;
+#~ my $owidth = 53;
+#~ my $bwidth = 0;
 my $mw = MainWindow->new;
 $mw->optionAdd('*font', 'Sans 16');
 #~ $mw->geometry("600x250");
@@ -20,7 +20,6 @@ my $main_frame = $mw->Frame(-background => "grey75")->pack(-side => 'top', -expa
 my $inp_frame = $main_frame->Frame(-background => "grey75")->pack(-side => 'top', -fill => 'both');
 my $func_frame = $inp_frame->Frame(-background => "grey75")->pack(-side => 'top', -fill => 'both');
 my $fradio_frame = $inp_frame->Frame()->pack(-side => "top", -expand => 1, -fill => 'x');
-#~ $fradio_frame->Label(-text=>"The value of logic: ", -background => "grey75")->pack(-side => "left");
 my $fradio_func = $fradio_frame->Radiobutton(-text => "function", -value => "function", -width => 0,
                                            -variable=> \$type)->pack(-side => "left", -expand => 1);
 my $fradio_poly = $fradio_frame->Radiobutton(-text => "polynomial", -value => "polynomial", -width => 0,
@@ -32,7 +31,7 @@ my $radio_frame = $inp_frame->Frame()->pack(-side => "top", -fill => 'x');
 my $file_frame = $inp_frame->Frame(-background => "grey75")->pack(-side => 'top', -fill => 'x');
 my $check_frame = $file_frame->Frame(-background => "grey75")->pack(-side => "left");
 my $enter_file_frame = $file_frame->Frame(-background => "grey75")->pack(-side => "right", -expand => 1, -fill => 'x');
-my $file_entry = $enter_file_frame->Entry(-background => "white", -width => $iwidth - 5,
+my $file_entry = $enter_file_frame->Entry(-background => "white",
                                        -foreground => "black")->pack(-side => "right", -expand => 1, -fill => 'x');
 $check_frame->Label(-text=>"Input from file? ", -background => "grey75")->pack(-side => "left")->pack(-side => "left");
 my $chk = $check_frame->Checkbutton(-variable => \$check_inp, -onvalue => 1, -offvalue => 0,
@@ -53,13 +52,13 @@ $polar_frame->Label(-text => "Polarization: ", -background => "grey75",
                       -foreground => "black")->pack(-side => "left");
 $out_frame->Label(-text => "Output: ", -background => "grey75",
                       -foreground => "black")->pack(-side => "left", -anchor => 'n');
-my $func_entry = $func_frame->Entry(-background => "white", -width => $iwidth,
+my $func_entry = $func_frame->Entry(-background => "white",
                                        -foreground => "darkred")->pack(-side => "right", -expand => 1, -fill => 'x');
-my $polar_entry = $polar_frame->Entry(-background => "white", -width => $iwidth,
+my $polar_entry = $polar_frame->Entry(-background => "white",
                                        -foreground => "darkred")->pack(-side => "right", -expand => 1, -fill => 'x');
-my $run_button = $inp_frame->Button(-text => "Run", -width => $bwidth,
+my $run_button = $inp_frame->Button(-text => "Run",
                                 -command => \&runprog)->pack(-side => "bottom", -fill => 'x');
-my $print_poly = $out_frame->Text(-background => "white", -height => 4, -width => $owidth,
+my $print_poly = $out_frame->Text(-background => "white", -height => 4,
                                        -foreground => "black")->pack(-side => "top", -expand => 1, -fill => 'both');                                                            
 
 sub runprog {
@@ -68,17 +67,22 @@ sub runprog {
     my ($vec_file, $polar_file, $out_file);
     if ($check_inp) {
         my $files = $file_entry->get();
-        $print_poly->insert('end', "Enter the filename!") unless $files;
+        unless ($files) {
+            #~ say "All bad!";
+            $print_poly->insert('end', "Enter the filename!");
+            return;
+        }
+        #~ $print_poly->insert('end', "Enter the filename!") unless $files;
         ($vec_file, $polar_file, $out_file) = split(/;\s?/, $files);
         #~ print("vf = '$vec_file'\npf = '$polar_file'\nof = '$out_file'\n");
         unless (open($fd_vec, "<$vec_file")) {
-            $print_poly->insert('end', "Couldn't open $vec_file!\n") if $vec_file;
+            $print_poly->insert('end', "Couldn't open file $vec_file!\n") if $vec_file;
         }
         unless (open($fd_polar, "<$polar_file")) {
-            $print_poly->insert('end', "Couldn't open $polar_file!\n") if $polar_file;
+            $print_poly->insert('end', "Couldn't open file $polar_file!\n") if $polar_file;
         }
         unless (open($fd_out, ">$out_file")) {
-            $print_poly->insert('end', "Couldn't open $out_file!\n") if $out_file;
+            $print_poly->insert('end', "Couldn't open file $out_file!\n") if $out_file;
         }
     }
     for(;;) {
@@ -98,7 +102,7 @@ sub runprog {
             $polar_vec = '0' x (log(length($func_vec)) / log($k)) if $func_vec;
         }
         my $k1 = $k - 1;
-        print "fv = '$func_vec'\npv = '$polar_vec'\n";
+        #~ print "fv = '$func_vec'\npv = '$polar_vec'\n";5
         if ($func_vec =~ /^([0-$k1]+)$/ && $polar_vec =~ /^([0-$k1]+)$/) {
             $_ = `./polynomial $func_vec $k $polar_vec $type` if $^O =~ /Linux/i;
             $_ = `polynomial.exe $func_vec $k $polar_vec $type` if $^O =~ /Win/i;
