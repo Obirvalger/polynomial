@@ -2,7 +2,7 @@
 use v5.14;
 use Tk;
 use strict;
-use warnings; 
+#~ use warnings; 
 
 my $k = 2;
 my $type = "function";
@@ -22,8 +22,8 @@ my $func_frame = $inp_frame->Frame(-background => "grey75")->pack(-side => 'top'
 my $fradio_frame = $inp_frame->Frame()->pack(-side => "top", -expand => 1, -fill => 'x');
 my $fradio_func = $fradio_frame->Radiobutton(-text => "function", -value => "function", -width => 0,
                                            -variable=> \$type)->pack(-side => "left", -expand => 1);
-my $fradio_poly = $fradio_frame->Radiobutton(-text => "polynomial", -value => "polynomial", -width => 0,
-                                             -variable=> \$type)->pack(-side => "left", -expand => 1);
+#~ my $fradio_poly = $fradio_frame->Radiobutton(-text => "polynomial", -value => "polynomial", -width => 0,
+                                             #~ -variable=> \$type)->pack(-side => "left", -expand => 1);
 my $fradio_period = $fradio_frame->Radiobutton(-text => "period", -value => "period", -width => 0,
                                           -variable=> \$type)->pack(-side => "left", -expand => 1);
 my $polar_frame = $inp_frame->Frame(-background => "grey75")->pack(-side => 'top', -fill => 'both');
@@ -62,6 +62,7 @@ my $print_poly = $out_frame->Text(-background => "white", -height => 4,
                                        -foreground => "black")->pack(-side => "top", -expand => 1, -fill => 'both');                                                            
 
 sub runprog {
+    #~ say "lol";
     $print_poly->delete('0.0', 'end');
     my ($fd_vec, $fd_polar, $fd_out);
     my ($vec_file, $polar_file, $out_file);
@@ -74,6 +75,14 @@ sub runprog {
         }
         #~ $print_poly->insert('end', "Enter the filename!") unless $files;
         ($vec_file, $polar_file, $out_file) = split(/;\s?/, $files);
+        if ($vec_file eq '' and $polar_file eq '' and $out_file eq '') {
+            $print_poly->insert('end', "Enter the filename!");
+            return;
+        }
+        #~ say $vec_file =~ /[^\.]/;
+        $vec_file .= '.txt' if ($vec_file and index($vec_file, '.') == -1);
+        $polar_file .= '.txt' if ($polar_file and index($polar_file, '.') == -1);
+        $out_file .= '.txt' if ($out_file and index($out_file, '.') == -1);
         #~ print("vf = '$vec_file'\npf = '$polar_file'\nof = '$out_file'\n");
         unless (open($fd_vec, "<$vec_file")) {
             $print_poly->insert('end', "Couldn't open file $vec_file!\n") if $vec_file;
@@ -87,14 +96,24 @@ sub runprog {
     }
     for(;;) {
         $_ = $func_entry->get();
-        chomp($_ = <$fd_vec>) if $vec_file;
+        #~ say "'$_'";
+        $_ = <$fd_vec> if $vec_file;
         return unless defined $_;
+        s/[\n\r]+$//;
         my $func_sep;
         my $func_vec;
         #~ say "type $type";
         if ($type eq 'period') {
+            unless($_) {
+                $print_poly->insert('end', "Enter n and function!\n");
+                return;
+            }
             my $n = $1 if s/\A(\d+)[^\d\(]*//;
             #~ say "Period n = $n";
+            unless($_) {
+                $print_poly->insert('end', "You entered only n.\nEnter the function!\n");
+                return;
+            }
             $func_sep = /\d([ ,]+)\d/ ? $1 : '';
             #~ say "$func_sep";
             $_ = join("", split(/[ ,]+/, s/[\(\)]//gr));
@@ -110,29 +129,40 @@ sub runprog {
         $func_sep //= /\d([ ,]+)\d/ ? $1 : '';
         $func_vec //= join("", split(/[ ,]+/, s/[\(\)]//gr));
         $_ = $polar_entry->get();
-        chomp($_ = <$fd_polar>) if $polar_file;
+        $_ = <$fd_polar> if $polar_file;
         return unless defined $_;
+        s/[\n\r]+$//;
         my $polar_vec = '0';
         if ($_) {
             $polar_vec = join("", split(/[ ,]+/, s/[\(\)]//gr));
-        } else {
-            $polar_vec = '0' x (log(length($func_vec)) / log($k)) if $func_vec;
+        } elsif($func_vec) {
+            my $n = log(length($func_vec)) / log($k);
+            #~ say $n;
+            $polar_vec = '0' x int(log(length($func_vec)) / log($k) + 0.5) if $func_vec;
+            #~ $polar_vec = '0' x 10;
+            #~ say "po = ", length($polar_vec);
+            #~ say "fu = ", $func_vec;
         }
+        #~ say "a${polar_vec}a";
         my $k1 = $k - 1;
-        #~ print "fv = '$func_vec'\npv = '$polar_vec'\n";5
+        #~ print "fv = '$func_vec'\npv = '$polar_vec'\n";
         if ($func_vec =~ /^([0-$k1]+)$/ && $polar_vec =~ /^([0-$k1]+)$/) {
             $_ = `./polynomial $func_vec $k $polar_vec $type` if $^O =~ /Linux/i;
             $_ = `polynomial.exe $func_vec $k $polar_vec $type` if $^O =~ /Win/i;
             if ($? == 0) {
+                #~ say $func_vec;
                 my $poly = '' . (join($func_sep, split)) . '';
                 #~ say $poly;
+                my $l = () = $poly =~ /([1-9])/g;
+                $poly .= sprintf("\nlength = %d", $l);
+                $poly = "Minus" if $poly =~ /-/;
                 $print_poly->insert("end", "$poly\n");
                 print $fd_out "$poly\n" if $fd_out;
             } else {
                 #~ say $?;
                 my $err = "Something goes wrong!\n";
-                $err = "Wrong number of digits in function!\nMust be the power of $k!\n" if /1/;
-                $err = "Wrong number of digits in polarization!\n" if /2/;
+                $err = "Wrong number of digits in function!\nMust be the power of $k!\n" if /\A1/;
+                $err = "Wrong number of digits in polarization!\n" if /\A2/;
                 $print_poly->insert("end", $err);
             }
             
@@ -140,7 +170,7 @@ sub runprog {
             unless($func_vec) {
                 $print_poly->insert('end', "Enter the function!\n");
             } elsif($func_vec !~ /^([0-$k1]+)$/) {
-                $print_poly->insert('end', "Wrong function!\n");
+                $print_poly->insert('end', "Wrong function!\nFunction must contain only digits in range(0, $k1)\n");
             }
             $print_poly->insert('end', "Wrong polarization!\n") if($polar_vec !~ /^([0-$k1]+)$/);
         }

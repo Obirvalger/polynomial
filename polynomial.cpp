@@ -8,14 +8,17 @@
 
 using namespace std;
 
-int ipow(int base, int exp) {
+int ipow(int base, int exp, int k = -1) {
     int result = 1;
+    if (k > 0) base %= k;
     while(exp) {
         if (exp & 1) {
             result *= base;
+	    if (k > 0) result %= k;
         }
         exp >>= 1;
         base *= base;
+	if (k > 0) base %= k;
     }
     return result;
 }
@@ -23,8 +26,10 @@ int ipow(int base, int exp) {
 int _log(int k, unsigned int x) {
   unsigned int ans = 0, y = x;
   while(x /= k) ans++;
-  if((y - ipow(k, ans)) != 0)
+  if((y - ipow(k, ans)) != 0) {
   	return -1;
+	//~ throw "Bad!";
+    }
   return ans ;
 }
 
@@ -134,16 +139,34 @@ vector<int> masked(const vector<vector<int> > &Ekn, const vector<int> &mask) {
 
 int sum(const vector<vector<int> > &Ekn, int k, const vector<int> &val, const vector<int> &a, const vector<int> &f) {
     int prod = 1, sum = 0;
+    //~ cout<<f;
     for (int i = 0; i < val.size(); ++i) {
 	prod  = 1;
 	for (int j = 0; j < a.size(); ++j) {
 	    if (a[j]) {
-		prod *= pow(Ekn[val[i]][j], k - 1 - a[j]);
+		prod *= ipow(Ekn[val[i]][j], k - 1 - a[j], k);
+		prod %= k;
 	    }
+	    /*if (prod < 0) {
+		cout<<"j = "<<j;
+		throw "";
+	    }*/
+	}
+	if (prod < 0) {
+	    cout<<"ipb = "<<i;
+	    throw "";
 	}
 	prod *= f[aconv(Ekn[val[i]], k)];
+	if (prod < 0) {
+	    cout<<"ipa = "<<i<<" f[.] = "<<f[aconv(Ekn[val[i]], k)]<<" p = "<<prod;
+	    throw "";
+	}
 	sum += prod;
 	sum %= k;
+	/*if (sum < 0) {
+	    cout<<"is = "<<i;
+	    throw "";
+	}*/
     }
 
     return sum;
@@ -161,6 +184,10 @@ vector<int> polarize(const vector<int> &f, const vector<int> &d, int k) {
 	}
 	j = aconv(tmp, k);
 	v[j] = f[i];
+	/*if (v[j] < 0) {
+	    cout<<"j = "<<j;
+	    throw "";
+	}*/
     }
 
     //~ cout<<"v = "<<v;
@@ -180,14 +207,17 @@ vector<int> polynomial(vector<int> f, const vector<int> &d, int k, int n) {
     for (int i = 0; i < Ekn.size(); ++i) {
 	//~ a = Ekn[i];
 	c[i] = sum(Ekn, k, masked(Ekn, Ekn[i]), Ekn[i], f);
+	//~ if (c[i] < 0) throw "Bada!";
 	number_non_zeros = false;
 	for (int j = 0; j < Ekn[i].size(); ++j) {
 	    if (Ekn[i][j]) number_non_zeros ^= 1;
 	}
 	if (number_non_zeros) {
-	    c[i] *= k - 1;
-	    c[i] %= k;
+	    c[i] *= -1;
+	    c[i] = (c[i] >= 0)? c[i] % k : k + c[i] % k;
 	}
+	//~ cout<<string(sprintf("%d", i));
+	//~ if (c[i] < 0) throw "Badb!";
     }
 
     return c;

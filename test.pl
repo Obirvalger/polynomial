@@ -4,7 +4,7 @@ use v5.14;
 use warnings;
 
 my $k = 2;
-my $n = 3;
+my $n = 5;
 my $maxf = 2 ** 2 ** $n - 1;
 my $l = length sprintf "%b", $maxf;
 my $d = '0' x $n;
