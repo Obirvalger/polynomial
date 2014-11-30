@@ -23,20 +23,30 @@ long_line_behaviour=1
 long_line_column=80
 
 [files]
-current_page=6
-FILE_NAME_0=676;Perl;0;EUTF-8;2;1;0;%2Fhome%2Fogneslav%2Fprog%2Fpolynomial%2Fpolynomial.pl;0;4
-FILE_NAME_1=588;C++;0;EUTF-8;2;1;0;%2Fhome%2Fogneslav%2Fprog%2Fpolynomial%2Fpolynomial.cpp;0;4
+current_page=9
+FILE_NAME_0=353;Perl;0;EUTF-8;2;1;0;%2Fhome%2Fogneslav%2Fprog%2Fpolynomial%2Fpolynomial.pl;0;4
+FILE_NAME_1=0;C++;0;EUTF-8;2;1;0;%2Fhome%2Fogneslav%2Fprog%2Fpolynomial%2Fpolynomial.cpp;0;4
 FILE_NAME_2=821;C++;0;EUTF-8;0;1;0;%2Fhome%2Fogneslav%2Fprog%2Fpolynomial%2Fpos.cpp;0;4
 FILE_NAME_3=6147;Perl;0;EUTF-8;0;1;0;%2Fhome%2Fogneslav%2Fprog%2Fpolynomial%2Ftry_tk.pl;0;4
 FILE_NAME_4=16;Perl;0;EUTF-8;2;1;0;%2Fhome%2Fogneslav%2Fprog%2Fpolynomial%2Ftmp.pl;0;4
-FILE_NAME_5=141;Perl;0;EUTF-8;2;1;0;%2Fhome%2Fogneslav%2Fprog%2Fpolynomial%2Ftest.pl;0;4
-FILE_NAME_6=1002;Perl;0;EUTF-8;0;1;0;%2Fhome%2Fogneslav%2Fprog%2Fpolynomial%2Fgui.pl;0;4
+FILE_NAME_5=185;Perl;0;EUTF-8;2;1;0;%2Fhome%2Fogneslav%2Fprog%2Fpolynomial%2Ftest.pl;0;4
+FILE_NAME_6=7050;Perl;0;EUTF-8;0;1;0;%2Fhome%2Fogneslav%2Fprog%2Fpolynomial%2Fgui.pl;0;4
+FILE_NAME_7=737;Perl;0;EUTF-8;2;1;0;%2Fhome%2Fogneslav%2Fprog%2Fpolynomial%2Fmake_polarization.pl;0;4
+FILE_NAME_8=274;Perl;0;EUTF-8;2;1;0;%2Fhome%2Fogneslav%2Fprog%2Fpolynomial%2Fmake_function.pl;0;4
+FILE_NAME_9=8403;C++;0;EUTF-8;2;1;0;%2Fhome%2Fogneslav%2Fprog%2Fpolynomial%2Ffind_longest.cpp;0;4
+FILE_NAME_10=162;Perl;0;EUTF-8;2;1;0;%2Fhome%2Fogneslav%2Fprog%2Fpolynomial%2Fperiod_to_layer.pl;0;4
 
 [VTE]
 last_dir=/home/ogneslav/prog/polynomial
 
 [build-menu]
 C++FT_02_LB=_Выполнить
-C++FT_02_CM="./%e" 1111
+C++FT_02_CM="./%e" 
 C++FT_02_WD=
 filetypes=C++;
+C++FT_01_LB=_Сборка
+C++FT_01_CM=g++ -std=c++11 -O3 -fopenmp -o "%e" "%f"
+C++FT_01_WD=
+C++FT_00_LB=_Скомпилировать
+C++FT_00_CM=g++ -std=c++11 -c -Wall "%f"
+C++FT_00_WD=

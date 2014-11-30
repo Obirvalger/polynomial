@@ -66,6 +66,8 @@ sub runprog {
     $print_poly->delete('0.0', 'end');
     my ($fd_vec, $fd_polar, $fd_out);
     my ($vec_file, $polar_file, $out_file);
+    my ($max_len, $max_polar ,$max_func, $max_poly) = -1;
+    my ($min_len, $min_polar ,$min_func, $min_poly) = 'none';
     if ($check_inp) {
         my $files = $file_entry->get();
         unless ($files) {
@@ -98,7 +100,12 @@ sub runprog {
         $_ = $func_entry->get();
         #~ say "'$_'";
         $_ = <$fd_vec> if $vec_file;
-        return unless defined $_;
+        #~ return unless defined $_;
+        unless (defined $_) {
+            $print_poly->insert('end', "max length = $max_len\nmax function = $max_func\nmax polarization = $max_polar\nmax polynomial = $max_poly\n");
+            $print_poly->insert('end', "min length = $min_len\nmin function = $min_func\nmin polarization = $min_polar\nmin polynomial = $min_poly\n");
+            return;
+        }
         s/[\n\r]+$//;
         my $func_sep;
         my $func_vec;
@@ -130,7 +137,11 @@ sub runprog {
         $func_vec //= join("", split(/[ ,]+/, s/[\(\)]//gr));
         $_ = $polar_entry->get();
         $_ = <$fd_polar> if $polar_file;
-        return unless defined $_;
+        unless (defined $_) {
+            $print_poly->insert('end', "max length = $max_len\nmax function = $max_func\nmax polarization = $max_polar\nmax polynomial = $max_poly\n");
+            $print_poly->insert('end', "min length = $min_len\nmin function = $min_func\nmin polarization = $min_polar\nmin polynomial = $min_poly\n");
+            return;
+        }
         s/[\n\r]+$//;
         my $polar_vec = '0';
         if ($_) {
@@ -154,6 +165,19 @@ sub runprog {
                 my $poly = '' . (join($func_sep, split)) . '';
                 #~ say $poly;
                 my $l = () = $poly =~ /([1-9])/g;
+                if ($max_len < $l) {
+                    $max_len = $l;
+                    $max_polar = $polar_vec;
+                    $max_func = $func_vec;
+                    $max_poly = $poly;
+                }
+                if ($min_len == 'none' or $min_len > $l) {
+                    $min_len = $l;
+                    $min_polar = $polar_vec;
+                    say $min_func;
+                    $min_func = $func_vec;
+                    $min_poly = $poly;
+                }
                 $poly .= sprintf("\nlength = %d", $l);
                 $poly = "Minus" if $poly =~ /-/;
                 $print_poly->insert("end", "$poly\n");
@@ -176,6 +200,7 @@ sub runprog {
         }
         last unless $check_inp;
     }
+    #~ $print_poly->insert('end', "max length = $max_len\nmax function = $max_func\nmax polarization = $max_polar\n");
     #~ $print_poly->insert('end', "All done\n") if $check_inp;
 }
 
