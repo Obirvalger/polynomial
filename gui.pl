@@ -22,8 +22,8 @@ my $func_frame = $inp_frame->Frame(-background => "grey75")->pack(-side => 'top'
 my $fradio_frame = $inp_frame->Frame()->pack(-side => "top", -expand => 1, -fill => 'x');
 my $fradio_func = $fradio_frame->Radiobutton(-text => "function", -value => "function", -width => 0,
                                            -variable=> \$type)->pack(-side => "left", -expand => 1);
-#~ my $fradio_poly = $fradio_frame->Radiobutton(-text => "polynomial", -value => "polynomial", -width => 0,
-                                             #~ -variable=> \$type)->pack(-side => "left", -expand => 1);
+my $fradio_poly = $fradio_frame->Radiobutton(-text => "polynomial", -value => "polynomial", -width => 0,
+                                             -variable=> \$type)->pack(-side => "left", -expand => 1);
 my $fradio_period = $fradio_frame->Radiobutton(-text => "period", -value => "period", -width => 0,
                                           -variable=> \$type)->pack(-side => "left", -expand => 1);
 my $polar_frame = $inp_frame->Frame(-background => "grey75")->pack(-side => 'top', -fill => 'both');
@@ -64,6 +64,7 @@ my $print_poly = $out_frame->Text(-background => "white", -height => 4,
 sub runprog {
     #~ say "lol";
     $print_poly->delete('0.0', 'end');
+    my ($n, $dp) = 0, "";
     my ($fd_vec, $fd_polar, $fd_out);
     my ($vec_file, $polar_file, $out_file);
     my ($max_len, $max_polar ,$max_func, $max_poly) = -1;
@@ -112,25 +113,47 @@ sub runprog {
         #~ say "type $type";
         if ($type eq 'period') {
             unless($_) {
-                $print_poly->insert('end', "Enter n and function!\n");
+                $print_poly->insert('end', "Enter n and weight vector!\n");
                 return;
             }
-            my $n = $1 if s/\A(\d+)[^\d\(]*//;
+            $n = $1 if s/\A(\d+)[^\d\(]*//;
             #~ say "Period n = $n";
             unless($_) {
-                $print_poly->insert('end', "You entered only n.\nEnter the function!\n");
+                $print_poly->insert('end', "You entered only n.\nEnter weight vector!\n");
                 return;
             }
             $func_sep = /\d([ ,]+)\d/ ? $1 : '';
             #~ say "$func_sep";
             $_ = join("", split(/[ ,]+/, s/[\(\)]//gr));
-            my $kn = $k ** $n;
-            my $x = ($kn % length) ? int($kn/length($_)) + 1 : $kn/length($_);
+            #~ my $kn = $k ** $n;
+            #~ my $x = ($kn % length) ? int($kn/length($_)) + 1 : $kn/length($_);
             #~ say $x;
-            $_ x= ($kn % length) ? $kn/length($_) + 1 : $kn/length($_);
-            $_ = substr $_, 0, $kn;
+            #~ $_ x= ($kn % length) ? $kn/length($_) + 1 : $kn/length($_);
+            #~ $_ = substr $_, 0, $kn;
             #~ say;
             $func_vec = $_;
+        }
+        elsif ($type eq 'polynomial') {
+            unless($_) {
+                $print_poly->insert('end', "Enter polynomial [;polarization]!\n");
+                return;
+            }
+            ($_, $dp) = split /;/;
+            #~ say;
+            #~ say $dp;
+            #~ unless($_) {
+                #~ $print_poly->insert('end', "You entered only n.\nEnter the function!\n");
+                #~ return;
+            #~ }
+            $func_sep = /\d([ ,]+)\d/ ? $1 : '';
+            #~ say "$func_sep";
+            $_ = join("", split(/[ ,]+/, s/[\(\)]//gr));
+            $dp = join("", split(/[ ,]+/, $dp));
+            #~ say "dp = $dp";
+        }
+        unless($_) {
+                $print_poly->insert('end', "Enter function!\n");
+                return;
         }
         #~ print "$_\n";
         $func_sep //= /\d([ ,]+)\d/ ? $1 : '';
@@ -143,23 +166,26 @@ sub runprog {
             return;
         }
         s/[\n\r]+$//;
+        $n ||= int(log(length($func_vec)) / log($k) + 0.5);
+        $dp ||= '0' x $n;
+        #~ say $n;
         my $polar_vec = '0';
         if ($_) {
             $polar_vec = join("", split(/[ ,]+/, s/[\(\)]//gr));
         } elsif($func_vec) {
-            my $n = log(length($func_vec)) / log($k);
-            #~ say $n;
-            $polar_vec = '0' x int(log(length($func_vec)) / log($k) + 0.5) if $func_vec;
-            #~ $polar_vec = '0' x 10;
-            #~ say "po = ", length($polar_vec);
-            #~ say "fu = ", $func_vec;
+            $polar_vec = '0' x $n;
         }
         #~ say "a${polar_vec}a";
         my $k1 = $k - 1;
         #~ print "fv = '$func_vec'\npv = '$polar_vec'\n";
         if ($func_vec =~ /^([0-$k1]+)$/ && $polar_vec =~ /^([0-$k1]+)$/) {
-            $_ = `./polynomial $func_vec $k $polar_vec $type` if $^O =~ /Linux/i;
-            $_ = `polynomial.exe $func_vec $k $polar_vec $type` if $^O =~ /Win/i;
+            #~ say $n;
+            #~ say $polar_vec;
+            #~ say $func_vec;
+            #~ say "dp = $dp";
+            #~ $_ = system("./polynomial $type $func_vec $k $polar_vec $n $dp") if $^O =~ /Linux/i;
+            $_ = `./polynomial $type $func_vec $k $polar_vec $n $dp` if $^O =~ /Linux/i;
+            $_ = `polynomial.exe $type $func_vec $k $polar_vec $n $dp` if $^O =~ /Win/i;
             if ($? == 0) {
                 #~ say $func_vec;
                 my $poly = '' . (join($func_sep, split)) . '';
@@ -171,10 +197,11 @@ sub runprog {
                     $max_func = $func_vec;
                     $max_poly = $poly;
                 }
-                if ($min_len == 'none' or $min_len > $l) {
+                if ($min_len eq 'none' or $min_len > $l) {
                     $min_len = $l;
+                    #~ say $min_len unless $l;
                     $min_polar = $polar_vec;
-                    say $min_func;
+                    #~ say $min_len;
                     $min_func = $func_vec;
                     $min_poly = $poly;
                 }
@@ -187,6 +214,7 @@ sub runprog {
                 my $err = "Something goes wrong!\n";
                 $err = "Wrong number of digits in function!\nMust be the power of $k!\n" if /\A1/;
                 $err = "Wrong number of digits in polarization!\n" if /\A2/;
+                $err = "Wrong number of digits in polynomial polarization!\n" if /\A3/;
                 $print_poly->insert("end", $err);
             }
             

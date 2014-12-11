@@ -98,8 +98,7 @@ int aconv(vector<int> number, int base) {
 int weight(const vector<int> &v) {
     int w = 0;
     for (int i = 0; i < v.size(); ++i) {
-	if (v[i])
-	    w++;
+	w += v[i];
     }
     return w;
 }
@@ -119,6 +118,18 @@ vector<int> restore_function(const vector<int> &period, int n, int k = 5) {
     }
     //~ cout<<f.size()<<" kn = "<<kn<<"\n";
     return f;
+}
+
+vector<int> restore_vector(const vector<int> &period, int size) {
+    vector<int> v = period;
+    int l = period.size(), times = (size % l) ? size / l : size / l - 1;
+    for (int i = 0; i < times; ++i) {
+	v.insert(v.end(), period.begin(), period.end());
+    }
+    if (size % l) {
+	v.erase(v.begin() + size, v.end());
+    }
+    return v;
 }
 
 set<int> makeI(const vector<int> &a) {
@@ -297,18 +308,62 @@ vector<vector<int> > make_periods(int k = 5, int l = 6) {
     return periods;
 }
 
+vector<int> vpow(const vector<int> &base, const vector<int> &exp, int k = -1) {
+    if (base.size() != exp.size())
+	throw "Error: different length in vpow";
+    vector<int> result;
+    for (int i = 0; i < base.size(); ++i) {
+	result.push_back(ipow(base[i], exp[i], k));
+    }
+    
+    return result;
+}
+
+int vmul(const vector<int> &v, int k = -1) {
+    int res = 1;
+    for (int i = 0; i < v.size(); ++i) {
+	res *= v[i];
+	if (k >= 0)
+	    res %= k;
+    }
+    
+    return res;
+}
+
+vector<int> func_from_poly(const vector<int> &p, const vector<vector<int> > &Ekn) {
+    vector<int> f(p.size());
+    int k = Ekn.back()[0] + 1;
+    for (int i = 0; i < Ekn.size(); ++i) {
+	for (int j = 0; j < Ekn.size(); ++j) {
+	    f[i] += p[j] * vmul(vpow(Ekn[i], Ekn[j], k), k);
+	    f[i] %= k;
+	}
+    }
+
+    return f;
+}
+
+vector<int> func_from_weight(const vector<int> &w, const vector<vector<int> > &Ekn) {
+    vector<int> f;
+    for (int i = 0; i < Ekn.size(); ++i) {
+	f.push_back(w[weight(Ekn[i])]);
+    }
+    //~ cout<<"sz="<<f.size()<<endl;
+    return f;
+}
+
 int main(int argc, char **argv) try {
     double lt = omp_get_wtime();
-    int k = 7, n = 3, l = k + 1, w = 0, min_w, treshold = ipow(k, n+1) / (k+1), sum = 0, max_j = 0;
-    //~ cout<<"tr = "<<treshold<<endl;
+    int k = 5, n = 5, l = k + 1, w = 0, min_w, treshold = (ipow(k, n+1) + ((n%2)?-1:1)) / (k+1), sum = 0, max_j = 0;
+    cout<<"tr = "<<treshold<<endl;
     bool little = false;
     string fname = "longest_";
     fname += to_string(k) + '_' + to_string(n) + ".txt";
     ofstream out(fname);
-    vector<int> f;
+    vector<int> f,g;
     vector<vector<int> > polarizations = make_polarizations(n, k), periods = make_periods(k, l);
     vector<vector<int> > Ekn = make_all_Ekn(k,n);
-    int array[2048];
+    int array[2048], *func_short = new int[periods.size()];
     
     
 #pragma omp parallel for
@@ -317,52 +372,36 @@ int main(int argc, char **argv) try {
 	array[i] = -1;
     }
     
-#pragma omp parallel for private(f, min_w, little, w)
+#pragma omp parallel for private(f, little)
     for (int i = 0; i < periods.size(); ++i) {
-	f = restore_function(periods[i], n, k);
-//~ #pragma omp single nowait
-	//~ {
-	    //~ printf("%d\n", i);
-	//~ }
-	//~ printf("i = %d\n", i);
-	//~ min_w = weight(polynomial(f, polarizations[0], k, n, Ekn));
+	//~ f = restore_function(periods[i], n, k);
+	f = func_from_weight(restore_vector(periods[i], (k-1) * n + 1), Ekn);
 	little = false;
 	for (int j = 0; j < polarizations.size(); ++j) {
-	    //~ cout<<"i = "<<i<<" j = "<<j<<"\n";
-	    //~ w = weight(polynomial(f, polarizations[j], k, n, Ekn));
-	    //~ little = is_little(f, polarizations[j], k, n, Ekn, treshold);
-	    //~ cout<<w<<" "<<treshold<<endl;
-	    //~ if ((w < treshold) ^ little)
-		//~ cout<<"All Bad!\n";
-	    //~ cout<<"i="<<i<<" j="<<j<<endl;//" w="<<w<<" little="<<little<<" true="<<(!((w < treshold) ^ little))<<endl;
-	    //~ cout<<"poly = "<<polynomial(f, polarizations[j], k, n, Ekn);
-	    /*if (w < treshold) {
-		little = true;
-		//~ cout<<w<<"lol\n";
-		break;
-	    }*/
-	    if (j > max_j) {
-		//~ printf("j = %d\n", j);
-		max_j = j;
-	    }
 	    if (is_little(f, polarizations[j], k, n, Ekn, treshold)) {
+		if (j > max_j) {
+		    max_j = j;
+		}
+		func_short[i] = j;
 		little = true;
 		break;
 	    }
-	    //~ if (w < min_w)
-		//~ min_w = w;
-	    //~ cout<<weight(polynomial(restore_function(periods[i], n, k), polarizations[j], k, n))<<endl;
 	}
-	//~ cout<<"period = "<<periods[i]<<"min = "<<min_w<<endl;
 	if (!little) {
+	    func_short[i] = -1;
 	    array[sum++] = i;
-	    cout<<"period = "<<periods[i];//<<"min = "<<min_w<<endl;
+	    cout<<"period = "<<periods[i];//<<restore_vector(periods[i], (k-1) * n + 1)<<"f = "<<f;
 	}
     }
     int i = 0, tmp = array[0];
     while(tmp > 0) {
 	out<<periods[tmp];
 	tmp = array[++i];
+    }
+    for (int i = 0; i < periods.size(); ++i) {
+	if (func_short[i] >= 0) {
+	    //~ cout<<periods[i]/*<<func_from_weight(restore_vector(periods[i],(k-1)*n + 1), Ekn)*/<<polarizations[func_short[i]]<<endl;
+	}
     }
     cout<<"sum = "<<sum<<endl;
     cout<<"max j = "<<max_j<<endl;

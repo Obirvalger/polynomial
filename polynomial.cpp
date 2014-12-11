@@ -28,7 +28,6 @@ int _log(int k, unsigned int x) {
   while(x /= k) ans++;
   if((y - ipow(k, ans)) != 0) {
   	return -1;
-	//~ throw "Bad!";
     }
   return ans ;
 }
@@ -70,8 +69,15 @@ bool operator<=(const set<int> &a, const set<int> &b) {
     return true;
 }
 
+int weight(const vector<int> &v) {
+    int w = 0;
+    for (int i = 0; i < v.size(); ++i) {
+	w += v[i];
+    }
+    return w;
+}
+
 vector<int> conv(int number, int base, int size) {
-  //~ int digits[] = {0,1,2,3,4,5,6,7,8,9};
   vector<int> ret(size,0);
   int i = 0;
   do {
@@ -95,12 +101,10 @@ int aconv(vector<int> number, int base) {
 
 set<int> makeI(const vector<int> &a) {
     set<int> I;
-
     for (int i = 0; i < a.size(); ++i) {
 	if (a[i]) {
 	    I.insert(i + 1);
 	}
-
     }
 
     return I;
@@ -126,20 +130,16 @@ bool le(const vector<int> &a, const vector<int> &b) {
 
 vector<int> masked(const vector<vector<int> > &Ekn, const vector<int> &mask) {
     vector<int> v;
-    //~ cout<<"mask = "<<mask;
     for (int i = 0; i < Ekn.size(); ++i) {
 	if (le(Ekn[i], mask))
 	    v.push_back(i);
     }
-    //~ cout<<"Ekn\n";
-    //~ for (int i = 0; i < Ekn.size(); ++i) {cout<<Ekn[i];}
-    //~ cout<<"v = "<<v;
+
     return v;
 }
 
 int sum(const vector<vector<int> > &Ekn, int k, const vector<int> &val, const vector<int> &a, const vector<int> &f) {
     int prod = 1, sum = 0;
-    //~ cout<<f;
     for (int i = 0; i < val.size(); ++i) {
 	prod  = 1;
 	for (int j = 0; j < a.size(); ++j) {
@@ -147,10 +147,6 @@ int sum(const vector<vector<int> > &Ekn, int k, const vector<int> &val, const ve
 		prod *= ipow(Ekn[val[i]][j], k - 1 - a[j], k);
 		prod %= k;
 	    }
-	    /*if (prod < 0) {
-		cout<<"j = "<<j;
-		throw "";
-	    }*/
 	}
 	if (prod < 0) {
 	    cout<<"ipb = "<<i;
@@ -163,10 +159,6 @@ int sum(const vector<vector<int> > &Ekn, int k, const vector<int> &val, const ve
 	}
 	sum += prod;
 	sum %= k;
-	/*if (sum < 0) {
-	    cout<<"is = "<<i;
-	    throw "";
-	}*/
     }
 
     return sum;
@@ -184,30 +176,22 @@ vector<int> polarize(const vector<int> &f, const vector<int> &d, int k) {
 	}
 	j = aconv(tmp, k);
 	v[j] = f[i];
-	/*if (v[j] < 0) {
-	    cout<<"j = "<<j;
-	    throw "";
-	}*/
     }
 
-    //~ cout<<"v = "<<v;
     return v;
 }
 
 vector<int> polynomial(vector<int> f, const vector<int> &d, int k, int n) {
     if (n == -1) throw "1err";
     if (d.size() != n) throw "2err";
-    vector<int> c(f.size()), a;
+    vector<int> c(f.size());
     vector<vector<int> > Ekn = make_all_Ekn(k,n);
     f = polarize(f,d,k);
     bool number_non_zeros = false;
-    //~ for (int i = 0; i < Ekn.size(); ++i) {cout<<Ekn[i];}
     set<int> I;
 
     for (int i = 0; i < Ekn.size(); ++i) {
-	//~ a = Ekn[i];
 	c[i] = sum(Ekn, k, masked(Ekn, Ekn[i]), Ekn[i], f);
-	//~ if (c[i] < 0) throw "Bada!";
 	number_non_zeros = false;
 	for (int j = 0; j < Ekn[i].size(); ++j) {
 	    if (Ekn[i][j]) number_non_zeros ^= 1;
@@ -216,19 +200,104 @@ vector<int> polynomial(vector<int> f, const vector<int> &d, int k, int n) {
 	    c[i] *= -1;
 	    c[i] = (c[i] >= 0)? c[i] % k : k + c[i] % k;
 	}
-	//~ cout<<string(sprintf("%d", i));
-	//~ if (c[i] < 0) throw "Badb!";
     }
 
     return c;
 }
 
+vector<int> vpow(const vector<int> &base, const vector<int> &exp, int k = -1) {
+    if (base.size() != exp.size())
+	throw "Error: different length in vpow";
+    vector<int> result;
+    for (int i = 0; i < base.size(); ++i) {
+	result.push_back(ipow(base[i], exp[i], k));
+    }
+    
+    return result;
+}
+
+int vmul(const vector<int> &v, int k = -1) {
+    int res = 1;
+    for (int i = 0; i < v.size(); ++i) {
+	res *= v[i];
+	if (k >= 0)
+	    res %= k;
+    }
+    
+    return res;
+}
+
+vector<int> vminus(vector<int> v1, const vector<int> &v2, int k) {
+    if (v1.size() != v2.size())
+	throw "3err";
+    for (int i = 0; i < v1.size(); ++i) {
+	v1[i] -= v2[i];
+	v1[i] = (v1[i] >= 0) ? v1[i] % k : k + v1[i];
+    }
+
+    return v1;
+}
+
+vector<int> func_from_poly(const vector<int> &p, const vector<int> &d, const vector<vector<int> > &Ekn) {
+    if (Ekn[0].size() != d.size())
+	throw "3err";
+    vector<int> f(p.size());
+    int k = Ekn.back()[0] + 1;
+    for (int i = 0; i < Ekn.size(); ++i) {
+	for (int j = 0; j < Ekn.size(); ++j) {
+	    f[i] += p[j] * vmul(vpow(vminus(Ekn[i], d, k), Ekn[j], k), k);
+	    f[i] = (f[i] >= 0) ? f[i] % k : k + f[i];
+	}
+    }
+
+    return f;
+}
+
+vector<int> restore_vector(const vector<int> &period, int size) {
+    vector<int> v = period;
+    int l = period.size(), times = (size % l) ? size / l : size / l - 1;
+    for (int i = 0; i < times; ++i) {
+	v.insert(v.end(), period.begin(), period.end());
+    }
+    if (size % l) {
+	v.erase(v.begin() + size, v.end());
+    }
+    return v;
+}
+
+vector<int> func_from_weight(const vector<int> &w, const vector<vector<int> > &Ekn) {
+    vector<int> f;
+    for (int i = 0; i < Ekn.size(); ++i) {
+	f.push_back(w[weight(Ekn[i])]);
+    }
+
+    return f;
+}
+
 int main(int argc, char **argv) try {
-    if (argc > 3) {
-	vector<int> f = make_vector(argv[1]);
-	int k = atoi(argv[2]), n = _log(k, f.size());
-	vector<int> d = make_vector(argv[3]), p = polynomial(f,d,k,n);
-	cout<<p;
+    if (argc > 5) {
+	string type = argv[1];
+	vector<int> f, d;
+	int k, n;
+	if (type == "function") {
+	    f = make_vector(argv[2]);
+	    d = make_vector(argv[4]);
+	    k = atoi(argv[3]);
+	    n = atoi(argv[5]);
+	} else if (type == "period") {
+	    k = atoi(argv[3]);
+	    n = atoi(argv[5]);
+	    vector<vector<int> > Ekn = make_all_Ekn(k, n);
+	    f = func_from_weight(restore_vector(make_vector(argv[2]), (k-1)*n + 1), Ekn);
+	    d = make_vector(argv[4]);
+	} else if (type == "polynomial") {
+	    d = make_vector(argv[4]);
+	    k = atoi(argv[3]);
+	    n = atoi(argv[5]);
+	    vector<vector<int> > Ekn = make_all_Ekn(k, n);
+	    f = func_from_poly(make_vector(argv[2]), make_vector(argv[6]), Ekn);	    
+	}
+	cout<<polynomial(f,d,k,n);
     } else {
 	printf("Need 3 arguments, passed %d\n", argc - 1);
     }
