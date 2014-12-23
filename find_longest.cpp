@@ -346,6 +346,8 @@ vector<int> func_from_poly(const vector<int> &p, const vector<vector<int> > &Ekn
 vector<int> func_from_weight(const vector<int> &w, const vector<vector<int> > &Ekn) {
     vector<int> f;
     for (int i = 0; i < Ekn.size(); ++i) {
+	//~ if(weight(Ekn[i]) > w.size())
+	    //~ cout<<"lol\n";
 	f.push_back(w[weight(Ekn[i])]);
     }
     //~ cout<<"sz="<<f.size()<<endl;
@@ -354,8 +356,8 @@ vector<int> func_from_weight(const vector<int> &w, const vector<vector<int> > &E
 
 int main(int argc, char **argv) try {
     double lt = omp_get_wtime();
-    int k = 5, n = 5, l = k + 1, w = 0, min_w, treshold = (ipow(k, n+1) + ((n%2)?-1:1)) / (k+1), sum = 0, max_j = 0;
-    cout<<"tr = "<<treshold<<endl;
+    int k = 5, n = 3, l = k + 1, treshold = (ipow(k, n+1) + ((n%2)?-1:1)) / (k+1), sum = 0, max_j = 0;
+    //~ cout<<"tr = "<<treshold<<endl;
     bool little = false;
     string fname = "longest_";
     fname += to_string(k) + '_' + to_string(n) + ".txt";
@@ -363,6 +365,7 @@ int main(int argc, char **argv) try {
     vector<int> f,g;
     vector<vector<int> > polarizations = make_polarizations(n, k), periods = make_periods(k, l);
     vector<vector<int> > Ekn = make_all_Ekn(k,n);
+    //~ cout<<Ekn.back()<<weight(Ekn.back())<<endl;
     int array[2048], *func_short = new int[periods.size()];
     
     

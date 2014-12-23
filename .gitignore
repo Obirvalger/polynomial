@@ -1,4 +1,7 @@
 *.o
 tmp*
+*.aux
+*.log
+*.bak
 pos
 polynomial
