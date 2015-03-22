@@ -73,7 +73,6 @@ bool operator<=(const set<int> &a, const set<int> &b) {
 }
 
 vector<int> conv(int number, int base, int size) {
-  //~ int digits[] = {0,1,2,3,4,5,6,7,8,9};
   vector<int> ret(size,0);
   int i = 0;
   do {
@@ -103,20 +102,24 @@ int weight(const vector<int> &v) {
     return w;
 }
 
+int len(const vector<int> &v) {
+    int w = 0;
+    for (int i = 0; i < v.size(); ++i) {
+	w += bool(v[i]);
+    }
+    return w;
+}
+
 vector<int> restore_function(const vector<int> &period, int n, int k = 5) {
     vector<int> f = period;
-    //~ cout<<((9 % 2) ? 9 / 2 + 1 : 9 / 2)<<endl;
     int l = period.size(), kn = ipow(k, n), times = (kn % l) ? kn / l : kn / l - 1;
-    //~ cout<<"times = "<<times<<" l = "<<l<<endl;
     for (int i = 0; i < times; ++i) {
-	//~ cout<<"i = "<<i<<" sz = "<<f.size()<<endl;
 	f.insert(f.end(), period.begin(), period.end());
     }
-    //~ cout<<"sz = "<<f.size()<<endl;
     if (kn % l) {
 	f.erase(f.begin() + kn, f.end());
     }
-    //~ cout<<f.size()<<" kn = "<<kn<<"\n";
+    
     return f;
 }
 
@@ -165,20 +168,17 @@ bool le(const vector<int> &a, const vector<int> &b) {
 
 vector<int> masked(const vector<vector<int> > &Ekn, const vector<int> &mask) {
     vector<int> v;
-    //~ cout<<"mask = "<<mask;
     for (int i = 0; i < Ekn.size(); ++i) {
 	if (le(Ekn[i], mask))
 	    v.push_back(i);
     }
-    //~ cout<<"Ekn\n";
-    //~ for (int i = 0; i < Ekn.size(); ++i) {cout<<Ekn[i];}
-    //~ cout<<"v = "<<v;
+
     return v;
 }
 
 int sum(const vector<vector<int> > &Ekn, int k, const vector<int> &val, const vector<int> &a, const vector<int> &f) {
     int prod = 1, sum = 0;
-    //~ cout<<f;
+
     for (int i = 0; i < val.size(); ++i) {
 	prod  = 1;
 	for (int j = 0; j < a.size(); ++j) {
@@ -186,10 +186,6 @@ int sum(const vector<vector<int> > &Ekn, int k, const vector<int> &val, const ve
 		prod *= ipow(Ekn[val[i]][j], k - 1 - a[j], k);
 		prod %= k;
 	    }
-	    /*if (prod < 0) {
-		cout<<"j = "<<j;
-		throw "";
-	    }*/
 	}
 	if (prod < 0) {
 	    cout<<"ipb = "<<i;
@@ -202,18 +198,13 @@ int sum(const vector<vector<int> > &Ekn, int k, const vector<int> &val, const ve
 	}
 	sum += prod;
 	sum %= k;
-	/*if (sum < 0) {
-	    cout<<"is = "<<i;
-	    throw "";
-	}*/
     }
 
     return sum;
 }
 
-//changing f(x1,x2,...,xn) to f(x1+d1,x2+d2,...,xn+dn)
+//changing f(x1,x2,...,xn) to f(x1-d1,x2-d2,...,xn-dn)
 vector<int> polarize(const vector<int> &f, const vector<int> &d, int k) {
-    //~ cout<<f<<d<<k<<endl;
     vector<int> v(f.size()), tmp;
     int j;
     for (int i = 0; i < f.size(); ++i) {
@@ -224,17 +215,12 @@ vector<int> polarize(const vector<int> &f, const vector<int> &d, int k) {
 	}
 	j = aconv(tmp, k);
 	v[j] = f[i];
-	/*if (v[j] < 0) {
-	    cout<<"j = "<<j;
-	    throw "";
-	}*/
     }
 
-    //~ cout<<"v = "<<v;
     return v;
 }
 
-vector<int> polynomial(vector<int> f, const vector<int> &d, int k, int n, const vector<vector<int> > &Ekn) {
+vector<int> polynomial(vector<int> &f, const vector<int> &d, int k, int n, const vector<vector<int> > &Ekn) {
     //~ cout<<"lol\n";
     //~ cout<<f<<"d = "<<d<<k<<" "<<n<<endl;
     if (n == -1) throw "1err";
@@ -242,7 +228,7 @@ vector<int> polynomial(vector<int> f, const vector<int> &d, int k, int n, const 
     vector<int> c(f.size()), a;
     //~ vector<vector<int> > Ekn = make_all_Ekn(k,n);
     //~ cout<<"lol\n";
-    f = polarize(f,d,k);
+    //f = polarize(f,d,k);
     //~ cout<<"lol\n";
     bool number_non_zeros = false;
     //~ for (int i = 0; i < Ekn.size(); ++i) {cout<<Ekn[i];}
@@ -250,7 +236,7 @@ vector<int> polynomial(vector<int> f, const vector<int> &d, int k, int n, const 
     //~ cout<<"lol\n";
     for (int i = 0; i < Ekn.size(); ++i) {
 	//~ a = Ekn[i];
-	c[i] = sum(Ekn, k, masked(Ekn, Ekn[i]), Ekn[i], f);
+	c[i] = sum(Ekn, k, masked(Ekn, Ekn[i]), Ekn[i], polarize(f,d,k));
 	//~ if (c[i] < 0) throw "Bada!";
 	//~ cout<<"psum = "<<c[i]<<endl;
 	number_non_zeros = false;
@@ -356,9 +342,35 @@ vector<int> func_from_weight(const vector<int> &w, const vector<vector<int> > &E
 
 int main(int argc, char **argv) try {
     double lt = omp_get_wtime();
-    int k = 5, n = 3, l = k + 1, treshold = (ipow(k, n+1) + ((n%2)?-1:1)) / (k+1), sum = 0, max_j = 0;
-    //~ cout<<"tr = "<<treshold<<endl;
-    bool little = false;
+    int k = 5, n = 5, l = k - 1, treshold = (ipow(k, n+1) + ((n%2)?-1:1)) / (k+1), sum = 0, max_j = 0;
+    vector<vector<int> > Ekn = make_all_Ekn(k,n), polarizations = make_polarizations(n, k);
+    vector<int> vec1 = {1,1,4,4}, f1 = func_from_weight(restore_vector(vec1, (k-1) * n + 1), Ekn);
+    //vector<int> vec2 = {1,4,4,1}, f2 = func_from_weight(restore_vector(vec2, (k-1) * n + 1), Ekn);
+    //cout<<f;
+    int min_len1 = len(polynomial(f1, polarizations[0], k, n, Ekn)), current_len1 = min_len1, min_idx = 0;
+    //int min_len2 = len(polynomial(f2, polarizations[0], k, n, Ekn)), current_len2 = min_len2;
+    //cout<<"LOL\n";
+    //cout<<polynomial(f, d, k, n, Ekn);
+    #pragma omp parallel for
+    for (int i = 1; i < polarizations.size(); ++i) {
+	current_len1 = len(polynomial(f1, polarizations[i], k, n, Ekn));
+	//current_len2 = len(polynomial(f2, polarizations[i], k, n, Ekn));
+	if (current_len1 < min_len1) {
+	    min_len1 = current_len1;
+	    min_idx = i;
+	    cout<<"min_len1 = "<<min_len1<<endl;
+	}
+	/*if (current_len2 < min_len2) {
+	    min_len2 = current_len2;
+	    cout<<"min_len2 = "<<min_len2<<endl;
+	}*/
+    }
+
+    cout<<endl;
+    cout<<"Length = "<<min_len1<<endl;
+    cout<<"Polarization = "<<min_idx<<endl;
+    //cout<<"Length 2 = "<<min_len2<<endl;
+    /*bool little = false;
     string fname = "longest_";
     fname += to_string(k) + '_' + to_string(n) + ".txt";
     ofstream out(fname);
@@ -378,6 +390,7 @@ int main(int argc, char **argv) try {
 #pragma omp parallel for private(f, little)
     for (int i = 0; i < periods.size(); ++i) {
 	//~ f = restore_function(periods[i], n, k);
+	if (i != 174 && i != 246) continue;
 	f = func_from_weight(restore_vector(periods[i], (k-1) * n + 1), Ekn);
 	little = false;
 	for (int j = 0; j < polarizations.size(); ++j) {
@@ -403,13 +416,14 @@ int main(int argc, char **argv) try {
     }
     for (int i = 0; i < periods.size(); ++i) {
 	if (func_short[i] >= 0) {
-	    //~ cout<<periods[i]/*<<func_from_weight(restore_vector(periods[i],(k-1)*n + 1), Ekn)*/<<polarizations[func_short[i]]<<endl;
+	    //~ cout<<periods[i]<<func_from_weight(restore_vector(periods[i],(k-1)*n + 1), Ekn)<<polarizations[func_short[i]]<<endl;
 	}
     }
     cout<<"sum = "<<sum<<endl;
     cout<<"max j = "<<max_j<<endl;
     printf("Time is equal %g\n", omp_get_wtime() - lt);
-    out.close();
+    out.close();*/
+    printf("Time is equal %g\n", omp_get_wtime() - lt);
     return 0;
 } catch(const char *err) {
     printf("%s\n", err);

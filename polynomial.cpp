@@ -171,7 +171,7 @@ vector<int> polarize(const vector<int> &f, const vector<int> &d, int k) {
     for (int i = 0; i < f.size(); ++i) {
 	tmp = conv(i, k, d.size());
 	for (int l = 0; l < tmp.size(); ++l) {
-	    tmp[l] += (k - d[l]);
+	    tmp[l] += (k + d[l]);
 	    tmp[l] %= k;
 	}
 	j = aconv(tmp, k);
